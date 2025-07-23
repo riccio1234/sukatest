@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Accedi con Google</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #g_id_onload {
+            margin-bottom: 20px;
+        }
+        #response-area {
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            text-align: left;
+            word-break: break-all; /* Per evitare overflow di stringhe lunghe */
+        }
+        pre {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Accedi con Google</h2>
+
+        <div id="g_id_onload"
+             data-client_id="426920828412-4s7j9rc2iv25p7sdbt32q8d90ito3944.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
+
+        <div id="response-area">
+            <h3>Risposta del Server:</h3>
+            <pre id="server-response"></pre>
+        </div>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+        // Funzione di callback che Google chiama dopo l'autenticazione
+        async function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+
+            const serverResponseElement = document.getElementById('server-response');
+            serverResponseElement.textContent = "Invio credenziali al tuo server...";
+
+            try {
+                // L'endpoint del tuo backend per l'autenticazione Google
+                const apiEndpoint = 'https://dot-accounts-dot.dotinc.repl.co/auth/google'; 
+
+                const res = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ credential: response.credential })
+                });
+
+                const data = await res.json();
+                serverResponseElement.textContent = JSON.stringify(data, null, 2);
+
+                if (res.ok) {
+                    console.log('Autenticazione Google riuscita:', data);
+                    // Qui puoi reindirizzare l'utente o aggiornare l'interfaccia
+                } else {
+                    console.error('Errore di autenticazione Google:', data);
+                }
+
+            } catch (error) {
+                console.error('Errore durante la comunicazione con il server:', error);
+                serverResponseElement.textContent = `Errore di rete o server: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
